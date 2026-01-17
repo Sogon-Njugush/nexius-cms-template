@@ -60,12 +60,12 @@ export function LoginForm({
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
+                  <Link
+                    href="/forgot-password"
                     className="ml-auto inline-block text-sm font-medium text-orange-600 hover:text-orange-700 underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </Link>
                 </div>
                 <Input
                   id="password"
@@ -76,7 +76,7 @@ export function LoginForm({
               </Field>
               <Field className="pt-2">
                 {/* Theme Color Button */}
-                <Link href="/dashboard">
+                <Link href="/otp">
                   <Button
                     type="submit"
                     className="w-full bg-orange-600 hover:bg-orange-700 text-white shadow-md transition-all active:scale-[0.98]"

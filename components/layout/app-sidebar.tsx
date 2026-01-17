@@ -15,9 +15,9 @@ import {
   Layers, // Added Layers icon
 } from "lucide-react";
 
-import { NavMain } from "@/components/nav-main";
+import { NavMain } from "@/components/layout/nav-main";
 import { NavProjects } from "./nav-projects";
-import { NavUser } from "@/components/nav-user";
+import { NavUser } from "@/components/layout/nav-user";
 // Removed TeamSwitcher import as it's no longer used
 import {
   Sidebar,
