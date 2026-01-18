@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 export function NavUser({
   user,
@@ -71,18 +72,22 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User2 />
-                Profile
-              </DropdownMenuItem>
+              <Link href="/profile">
+                <DropdownMenuItem>
+                  <User2 />
+                  Profile
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem>
                 <Settings />
                 Setting
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
+              <Link href="/notifications">
+                <DropdownMenuItem>
+                  <Bell />
+                  Notifications
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>

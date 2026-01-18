@@ -17,6 +17,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
 const SAMPLE_USER = {
   name: "Nexius",
@@ -76,14 +77,18 @@ export function NavUser() {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
-                <BadgeCheck className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Bell className="mr-2 h-4 w-4" />
-                Notifications
-              </DropdownMenuItem>
+              <Link href="/profile">
+                <DropdownMenuItem className="cursor-pointer">
+                  <BadgeCheck className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/notifications">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Bell className="mr-2 h-4 w-4" />
+                  Notifications
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings

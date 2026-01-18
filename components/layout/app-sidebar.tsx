@@ -2,23 +2,28 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
+  Archive,
   BookOpen,
   Bot,
-  Command,
+  Briefcase,
+  FileText,
   Frame,
-  GalleryVerticalEnd,
+  Globe,
+  Image as ImageIcon,
+  LayoutDashboard,
   Map,
+  MessageSquare,
   PieChart,
   Settings2,
-  SquareTerminal,
-  Layers, // Added Layers icon
+  Users,
+  Layers,
+  Inbox,
+  PenTool,
 } from "lucide-react";
 
 import { NavMain } from "@/components/layout/nav-main";
-import { NavProjects } from "./nav-projects";
+import { NavProjects } from "./nav-projects"; // We will treat this as "Inbox"
 import { NavUser } from "@/components/layout/nav-user";
-// Removed TeamSwitcher import as it's no longer used
 import {
   Sidebar,
   SidebarContent,
@@ -28,127 +33,119 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
+import Link from "next/link";
 
+// This data mimics a real CMS structure
 const data = {
   user: {
-    name: "Nexius",
-    email: "m@nexius.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Admin User",
+    email: "admin@nexius.com",
+    avatar: "/avatars/admin.jpg",
   },
-  navMain: [
+  // CORE MANAGEMENT (Pages & Globals)
+  cmsMain: [
     {
-      title: "Dashboard",
-      url: "#",
-      icon: SquareTerminal,
+      title: "Overview",
+      url: "/dashboard",
+      icon: LayoutDashboard,
       isActive: true,
       items: [
-        {
-          title: "Hero",
-          url: "#",
-        },
-        {
-          title: "Services",
-          url: "#",
-        },
-        {
-          title: "Footer",
-          url: "#",
-        },
+        { title: "Dashboard", url: "/dashboard" },
+        { title: "Recent Activity", url: "/activity" },
       ],
     },
     {
-      title: "Platform",
+      title: "Page Editor", // "Single Types" - Unique pages
       url: "#",
-      icon: Bot,
+      icon: FileText,
       items: [
-        {
-          title: "Automation",
-          url: "#",
-        },
-        {
-          title: "Data Network",
-          url: "#",
-        },
-        {
-          title: "Intelligence",
-          url: "#",
-        },
-        {
-          title: "Reporting",
-          url: "#",
-        },
+        { title: "Home Page", url: "/pages/home" },
+        { title: "About Us", url: "/pages/about" },
+        { title: "Contact Page", url: "/pages/contact" },
+        { title: "Landing Pages", url: "/pages/landing" },
       ],
     },
     {
-      title: "Solutions",
+      title: "Global Layout", // Things that appear on every page
       url: "#",
-      icon: BookOpen,
+      icon: Globe,
       items: [
-        {
-          title: "Enterprise",
-          url: "#",
-        },
-        {
-          title: "FinTech",
-          url: "#",
-        },
-        {
-          title: "Logistics",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Resources",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "Blog",
-          url: "#",
-        },
-        {
-          title: "Events & Webinars",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Company",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "About Us",
-          url: "#",
-        },
-        {
-          title: "Careers",
-          url: "#",
-        },
-        {
-          title: "Contact & Support",
-          url: "#",
-        },
+        { title: "Main Navigation", url: "/globals/nav" },
+        { title: "Footer Columns", url: "/globals/footer" },
+        { title: "Brand & Logos", url: "/globals/brand" },
       ],
     },
   ],
-  projects: [
+  // DYNAMIC COLLECTIONS (Blogs, Services, etc.)
+  collections: [
+    {
+      title: "Solutions & Services",
+      url: "#",
+      icon: Bot,
+      items: [
+        { title: "All Solutions", url: "/solutions" }, // List View
+        { title: "Add New Solution", url: "/solutions/new" },
+        { title: "Service Categories", url: "/solutions/categories" },
+      ],
+    },
+    {
+      title: "Resource Center",
+      url: "#",
+      icon: BookOpen,
+      items: [
+        { title: "Blog Posts", url: "/blog" },
+        { title: "Case Studies", url: "/case-studies" },
+        { title: "Whitepapers", url: "/whitepapers" },
+      ],
+    },
+    {
+      title: "Events & Webinars",
+      url: "#",
+      icon: Briefcase,
+      items: [
+        { title: "Upcoming Events", url: "/events" },
+        { title: "Past Recordings", url: "/events/archive" },
+      ],
+    },
+  ],
+  // SYSTEM & MEDIA
+  system: [
+    {
+      title: "Media Library",
+      url: "/media",
+      icon: ImageIcon,
+      items: [{ title: "Media", url: "/media" }],
+    },
+    {
+      title: "Settings",
+      url: "#",
+      icon: Settings2,
+      items: [
+        { title: "General & SEO", url: "/settings/seo" },
+        { title: "Admin Users", url: "/settings/users" },
+        { title: "Integrations", url: "/settings/api" },
+      ],
+    },
+  ],
+  // INCOMING DATA (Forms)
+  inbox: [
     {
       name: "Demo Requests",
-      url: "#",
+      url: "/inbox/contact",
       icon: Frame,
     },
     {
-      name: "Job Applications",
-      url: "#",
-      icon: PieChart,
+      name: "Job Applicants",
+      url: "/inbox/jobs",
+      icon: Users,
     },
     {
-      name: "Other Contacts",
-      url: "#",
-      icon: Map,
+      name: "Support Tickets",
+      url: "/inbox/support",
+      icon: MessageSquare,
     },
   ],
 };
@@ -156,29 +153,49 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
+      {/* HEADER: BRANDING */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="hover:bg-transparent focus-visible:ring-0"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-orange-600 text-white shadow-lg transition-transform group-hover:scale-105">
-                <Layers className="h-5 w-5" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-orange-600 text-sidebar-primary-foreground">
+                <Layers className="size-4" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate text-xl font-extrabold tracking-tight text-slate-900 dark:text-white ml-2">
-                  NEXIUS
-                </span>
-              </div>
+              <Link href="/dashboard">
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-bold">NEXIUS</span>
+                  <span className="truncate text-xs">CMS v2.0</span>
+                </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        {/* SECTION 1: CORE PAGES */}
+        <NavMain items={data.cmsMain} />
+
+        {/* SECTION 2: DYNAMIC CONTENT (Grouped for clarity) */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Collections</SidebarGroupLabel>
+          <NavMain items={data.collections} />
+        </SidebarGroup>
+
+        {/* SECTION 3: SYSTEM */}
+        <SidebarGroup>
+          <SidebarGroupLabel>System</SidebarGroupLabel>
+          <NavMain items={data.system} />
+        </SidebarGroup>
+
+        {/* SECTION 4: INBOX (Reusing NavProjects for list items) */}
+        <NavProjects projects={data.inbox} />
       </SidebarContent>
+
+      {/* FOOTER: USER PROFILE */}
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
