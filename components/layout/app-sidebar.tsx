@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation"; // 1. Import usePathname
 import {
-  Archive,
   BookOpen,
   Bot,
   Briefcase,
@@ -11,18 +11,14 @@ import {
   Globe,
   Image as ImageIcon,
   LayoutDashboard,
-  Map,
   MessageSquare,
-  PieChart,
   Settings2,
   Users,
   Layers,
-  Inbox,
-  PenTool,
 } from "lucide-react";
 
 import { NavMain } from "@/components/layout/nav-main";
-import { NavProjects } from "./nav-projects"; // We will treat this as "Inbox"
+import { NavProjects } from "./nav-projects";
 import { NavUser } from "@/components/layout/nav-user";
 import {
   Sidebar,
@@ -38,27 +34,25 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 
-// This data mimics a real CMS structure
+// Keep data static, we will map over it in the component
 const data = {
   user: {
     name: "Admin User",
     email: "admin@nexius.com",
     avatar: "/avatars/admin.jpg",
   },
-  // CORE MANAGEMENT (Pages & Globals)
   cmsMain: [
     {
       title: "Overview",
       url: "/dashboard",
       icon: LayoutDashboard,
-      isActive: true,
       items: [
         { title: "Dashboard", url: "/dashboard" },
         { title: "Recent Activity", url: "/activity" },
       ],
     },
     {
-      title: "Page Editor", // "Single Types" - Unique pages
+      title: "Page Editor",
       url: "#",
       icon: FileText,
       items: [
@@ -69,7 +63,7 @@ const data = {
       ],
     },
     {
-      title: "Global Layout", // Things that appear on every page
+      title: "Global Layout",
       url: "#",
       icon: Globe,
       items: [
@@ -79,14 +73,13 @@ const data = {
       ],
     },
   ],
-  // DYNAMIC COLLECTIONS (Blogs, Services, etc.)
   collections: [
     {
       title: "Solutions & Services",
       url: "#",
       icon: Bot,
       items: [
-        { title: "All Solutions", url: "/solutions" }, // List View
+        { title: "All Solutions", url: "/solutions" },
         { title: "Add New Solution", url: "/solutions/new" },
         { title: "Service Categories", url: "/solutions/categories" },
       ],
@@ -111,13 +104,12 @@ const data = {
       ],
     },
   ],
-  // SYSTEM & MEDIA
   system: [
     {
       title: "Media Library",
       url: "/media",
       icon: ImageIcon,
-      items: [{ title: "Media", url: "/media" }],
+      items: [], // Single item parent
     },
     {
       title: "Settings",
@@ -130,7 +122,6 @@ const data = {
       ],
     },
   ],
-  // INCOMING DATA (Forms)
   inbox: [
     {
       name: "Demo Requests",
@@ -151,9 +142,46 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // 2. Get the current path
+  const pathname = usePathname();
+
+  // 3. Helper function to check active state dynamically
+  // This ensures the parent is expanded if a child is active
+  const setActive = (items: any[]) => {
+    return items.map((item) => {
+      // Check if any child matches the current path
+      const isChildActive = item.items?.some(
+        (subItem: any) => subItem.url === pathname,
+      );
+      // Check if the item itself matches (for single-level items)
+      const isSelfActive = item.url === pathname;
+
+      return {
+        ...item,
+        // Parent is active if itself or a child is active
+        isActive: isSelfActive || isChildActive,
+        // Pass active state down to children for styling
+        items: item.items?.map((subItem: any) => ({
+          ...subItem,
+          isActive: subItem.url === pathname,
+        })),
+      };
+    });
+  };
+
+  // 4. Calculate active states
+  const cmsMainActive = setActive(data.cmsMain);
+  const collectionsActive = setActive(data.collections);
+  const systemActive = setActive(data.system);
+
+  // For Inbox (which uses NavProjects), we just need to mark the individual item
+  const inboxActive = data.inbox.map((item) => ({
+    ...item,
+    isActive: item.url === pathname,
+  }));
+
   return (
     <Sidebar collapsible="icon" {...props}>
-      {/* HEADER: BRANDING */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -167,7 +195,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Link href="/dashboard">
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-bold">NEXIUS</span>
-                  <span className="truncate text-xs">CMS v1.0</span>
+                  <span className="truncate text-xs">CMS v2.0</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -176,26 +204,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* SECTION 1: CORE PAGES */}
-        <NavMain items={data.cmsMain} />
+        {/* Pass the dynamically calculated arrays */}
+        <NavMain items={cmsMainActive} />
 
-        {/* SECTION 2: DYNAMIC CONTENT (Grouped for clarity) */}
         <SidebarGroup>
           <SidebarGroupLabel>Collections</SidebarGroupLabel>
-          <NavMain items={data.collections} />
+          <NavMain items={collectionsActive} />
         </SidebarGroup>
 
-        {/* SECTION 3: SYSTEM */}
         <SidebarGroup>
           <SidebarGroupLabel>System</SidebarGroupLabel>
-          <NavMain items={data.system} />
+          <NavMain items={systemActive} />
         </SidebarGroup>
 
-        {/* SECTION 4: INBOX (Reusing NavProjects for list items) */}
-        <NavProjects projects={data.inbox} />
+        <NavProjects projects={inboxActive} />
       </SidebarContent>
 
-      {/* FOOTER: USER PROFILE */}
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>

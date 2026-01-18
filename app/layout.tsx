@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ActiveThemeProvider } from "@/components/theme/active-theme";
 import { cookies } from "next/headers";
 import { cn } from "@/lib/utils";
+import NextTopLoader from "nextjs-toploader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,17 @@ export default async function RootLayout({
           enableColorScheme
         >
           <ActiveThemeProvider initialTheme={activeThemeValue}>
+            <NextTopLoader
+              color="#ea580c" /* Orange-600 to match your branding */
+              initialPosition={0.08}
+              crawlSpeed={200}
+              height={3}
+              crawl={true}
+              showSpinner={false} /* Spinners look dated, bars are better */
+              easing="ease"
+              speed={200}
+              shadow="0 0 10px #ea580c,0 0 5px #ea580c"
+            />
             {children}
           </ActiveThemeProvider>
         </ThemeProvider>

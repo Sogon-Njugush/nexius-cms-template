@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import { MonitoringDashboard } from "@/components/data-table";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
   return (
@@ -19,6 +21,7 @@ export default function Page() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
+        {/* <Suspense fallback={<Skeleton className="h-[300px] w-full" />}> */}
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
@@ -30,6 +33,7 @@ export default function Page() {
             </div>
           </div>
         </div>
+        {/* </Suspense> */}
       </SidebarInset>
     </SidebarProvider>
   );
