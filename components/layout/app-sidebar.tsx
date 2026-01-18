@@ -167,7 +167,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <Link href="/dashboard">
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-bold">NEXIUS</span>
-                  <span className="truncate text-xs">CMS v2.0</span>
+                  <span className="truncate text-xs">CMS v1.0</span>
                 </div>
               </Link>
             </SidebarMenuButton>
