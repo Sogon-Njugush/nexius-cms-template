@@ -2,95 +2,55 @@
 
 import * as React from "react";
 import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type UniqueIdentifier,
-} from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
+} from "recharts";
 import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
-  IconCircleCheckFilled,
-  IconDotsVertical,
-  IconGripVertical,
+  IconAlertTriangle,
+  IconBan,
+  IconCheck,
+  IconDeviceDesktop,
+  IconDeviceMobile,
+  IconDownload,
+  IconFilter,
+  IconGlobe,
   IconLayoutColumns,
-  IconLoader,
-  IconPlus,
-  IconTrendingUp,
+  IconLock,
+  IconRefresh,
+  IconServer,
+  IconShield,
+  IconShieldLock,
+  IconUser,
 } from "@tabler/icons-react";
 import {
+  ColumnDef,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
-  type ColumnDef,
-  type ColumnFiltersState,
-  type Row,
-  type SortingState,
-  type VisibilityState,
 } from "@tanstack/react-table";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import { toast } from "sonner";
-import { z } from "zod";
 
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -101,394 +61,447 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const schema = z.object({
-  id: z.number(),
-  header: z.string(),
-  type: z.string(),
-  status: z.string(),
-  target: z.string(),
-  limit: z.string(),
-  reviewer: z.string(),
-});
+// --- 1. DATA TYPES & MOCK DATA ---
 
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  });
+type VisitorLog = {
+  id: string;
+  ip: string;
+  location: string;
+  path: string;
+  status: number;
+  latency: number;
+  device: "Desktop" | "Mobile";
+  time: string;
+};
 
-  return (
-    <Button
-      {...attributes}
-      {...listeners}
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
-    >
-      <IconGripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
-  );
-}
+type SecurityEvent = {
+  id: string;
+  event: string;
+  severity: "Low" | "Medium" | "High" | "Critical";
+  source: string;
+  target: string;
+  status: "Blocked" | "Flagged" | "Allowed";
+  time: string;
+};
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+const recentVisitors: VisitorLog[] = [
   {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
+    id: "1",
+    ip: "104.22.12.1",
+    location: "US, CA",
+    path: "/pricing",
+    status: 200,
+    latency: 45,
+    device: "Desktop",
+    time: "Just now",
   },
   {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
+    id: "2",
+    ip: "185.11.4.20",
+    location: "UK, London",
+    path: "/blog/seo-tips",
+    status: 200,
+    latency: 120,
+    device: "Mobile",
+    time: "1 min ago",
   },
   {
-    accessorKey: "header",
-    header: "Header",
-    cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />;
-    },
-    enableHiding: false,
+    id: "3",
+    ip: "92.15.66.12",
+    location: "DE, Berlin",
+    path: "/api/user",
+    status: 500,
+    latency: 450,
+    device: "Desktop",
+    time: "2 min ago",
   },
   {
-    accessorKey: "type",
-    header: "Section Type",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.type}
-        </Badge>
-      </div>
-    ),
+    id: "4",
+    ip: "23.44.12.90",
+    location: "CA, Toronto",
+    path: "/",
+    status: 200,
+    latency: 32,
+    device: "Mobile",
+    time: "5 min ago",
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="text-muted-foreground px-1.5">
-        {row.original.status === "Done" ? (
-          <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-        ) : (
-          <IconLoader />
-        )}
-        {row.original.status}
-      </Badge>
-    ),
+    id: "5",
+    ip: "13.55.12.11",
+    location: "US, NY",
+    path: "/login",
+    status: 401,
+    latency: 85,
+    device: "Desktop",
+    time: "8 min ago",
   },
   {
-    accessorKey: "target",
-    header: () => <div className="w-full text-right">Target</div>,
-    cell: ({ row }) => (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
-          });
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-target`} className="sr-only">
-          Target
-        </Label>
-        <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-          defaultValue={row.original.target}
-          id={`${row.original.id}-target`}
-        />
-      </form>
-    ),
+    id: "6",
+    ip: "203.11.9.1",
+    location: "AU, Sydney",
+    path: "/dashboard",
+    status: 200,
+    latency: 190,
+    device: "Desktop",
+    time: "10 min ago",
   },
   {
-    accessorKey: "limit",
-    header: () => <div className="w-full text-right">Limit</div>,
-    cell: ({ row }) => (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
-          });
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-limit`} className="sr-only">
-          Limit
-        </Label>
-        <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-          defaultValue={row.original.limit}
-          id={`${row.original.id}-limit`}
-        />
-      </form>
-    ),
+    id: "7",
+    ip: "88.12.44.1",
+    location: "FR, Paris",
+    path: "/features",
+    status: 200,
+    latency: 60,
+    device: "Mobile",
+    time: "12 min ago",
   },
   {
-    accessorKey: "reviewer",
-    header: "Reviewer",
-    cell: ({ row }) => {
-      const isAssigned = row.original.reviewer !== "Assign reviewer";
-
-      if (isAssigned) {
-        return row.original.reviewer;
-      }
-
-      return (
-        <>
-          <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
-            Reviewer
-          </Label>
-          <Select>
-            <SelectTrigger
-              className="w-38 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate"
-              size="sm"
-              id={`${row.original.id}-reviewer`}
-            >
-              <SelectValue placeholder="Assign reviewer" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-              <SelectItem value="Jamik Tashpulatov">
-                Jamik Tashpulatov
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </>
-      );
-    },
+    id: "8",
+    ip: "101.2.3.4",
+    location: "JP, Tokyo",
+    path: "/api/data",
+    status: 200,
+    latency: 210,
+    device: "Desktop",
+    time: "15 min ago",
   },
   {
-    id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-            size="icon"
-          >
-            <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    id: "9",
+    ip: "45.12.1.99",
+    location: "BR, Rio",
+    path: "/",
+    status: 200,
+    latency: 150,
+    device: "Mobile",
+    time: "18 min ago",
+  },
+  {
+    id: "10",
+    ip: "192.168.1.1",
+    location: "Localhost",
+    path: "/admin",
+    status: 200,
+    latency: 5,
+    device: "Desktop",
+    time: "20 min ago",
+  },
+  {
+    id: "11",
+    ip: "12.34.56.78",
+    location: "US, Seattle",
+    path: "/docs",
+    status: 200,
+    latency: 40,
+    device: "Desktop",
+    time: "22 min ago",
+  },
+  {
+    id: "12",
+    ip: "98.76.54.32",
+    location: "IN, Mumbai",
+    path: "/api/v1/status",
+    status: 200,
+    latency: 250,
+    device: "Mobile",
+    time: "25 min ago",
   },
 ];
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  });
+const securityEvents: SecurityEvent[] = [
+  {
+    id: "1",
+    event: "SQL Injection Attempt",
+    severity: "Critical",
+    source: "192.168.1.55",
+    target: "/api/login",
+    status: "Blocked",
+    time: "10 mins ago",
+  },
+  {
+    id: "2",
+    event: "Brute Force Login",
+    severity: "High",
+    source: "45.12.1.99",
+    target: "/admin",
+    status: "Blocked",
+    time: "25 mins ago",
+  },
+  {
+    id: "3",
+    event: "Suspicious User Agent",
+    severity: "Medium",
+    source: "Bot-Net-Alpha",
+    target: "/",
+    status: "Flagged",
+    time: "1 hour ago",
+  },
+  {
+    id: "4",
+    event: "Admin Password Reset",
+    severity: "Low",
+    source: "System",
+    target: "User: Admin",
+    status: "Allowed",
+    time: "2 hours ago",
+  },
+  {
+    id: "5",
+    event: "Port Scan Detected",
+    severity: "High",
+    source: "88.12.44.1",
+    target: "Port 22",
+    status: "Blocked",
+    time: "3 hours ago",
+  },
+  {
+    id: "6",
+    event: "New API Key Generated",
+    severity: "Low",
+    source: "User: Sarah",
+    target: "Settings",
+    status: "Allowed",
+    time: "5 hours ago",
+  },
+];
 
+const performanceData = [
+  { time: "10:00", requests: 120, latency: 40 },
+  { time: "10:05", requests: 180, latency: 45 },
+  { time: "10:10", requests: 150, latency: 38 },
+  { time: "10:15", requests: 250, latency: 55 },
+  { time: "10:20", requests: 300, latency: 120 },
+  { time: "10:25", requests: 220, latency: 60 },
+  { time: "10:30", requests: 190, latency: 42 },
+  { time: "10:35", requests: 210, latency: 45 },
+  { time: "10:40", requests: 180, latency: 39 },
+  { time: "10:45", requests: 240, latency: 50 },
+  { time: "10:50", requests: 350, latency: 150 }, // Spike
+  { time: "10:55", requests: 280, latency: 80 },
+];
+
+// --- 2. SUB-COMPONENTS ---
+
+function StatusBadge({ code }: { code: number }) {
+  if (code >= 200 && code < 300) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-green-200 bg-green-50 text-green-700 gap-1 font-mono"
+      >
+        <IconCheck className="size-3" /> {code}
+      </Badge>
+    );
+  }
+  if (code >= 400 && code < 500) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-orange-200 bg-orange-50 text-orange-700 gap-1 font-mono"
+      >
+        <IconAlertTriangle className="size-3" /> {code}
+      </Badge>
+    );
+  }
   return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
+    <Badge variant="destructive" className="gap-1 font-mono">
+      <IconServer className="size-3" /> {code}
+    </Badge>
   );
 }
 
-export function DataTable({
-  data: initialData,
-}: {
-  data: z.infer<typeof schema>[];
-}) {
-  const [data, setData] = React.useState(() => initialData);
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+function SecurityBadge({ severity }: { severity: string }) {
+  switch (severity) {
+    case "Critical":
+      return (
+        <Badge variant="destructive" className="bg-red-600">
+          Critical
+        </Badge>
+      );
+    case "High":
+      return (
+        <Badge variant="default" className="bg-orange-600 hover:bg-orange-700">
+          High
+        </Badge>
+      );
+    case "Medium":
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+        >
+          Medium
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="text-slate-500">
+          Low
+        </Badge>
+      );
+  }
+}
+
+// --- 3. MAIN COMPONENT ---
+
+export function MonitoringDashboard() {
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
   });
-  const sortableId = React.useId();
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {}),
-  );
 
-  const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
-    [data],
-  );
+  const columns: ColumnDef<VisitorLog>[] = [
+    {
+      accessorKey: "ip",
+      header: "Visitor",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+            {row.original.device === "Desktop" ? (
+              <IconDeviceDesktop className="size-4 text-slate-500" />
+            ) : (
+              <IconDeviceMobile className="size-4 text-slate-500" />
+            )}
+          </div>
+          <div className="grid gap-0.5">
+            <span className="font-medium text-sm text-foreground font-mono">
+              {row.original.ip}
+            </span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <IconGlobe className="size-3" /> {row.original.location}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "path",
+      header: "Path",
+      cell: ({ row }) => (
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded border font-mono text-muted-foreground">
+          {row.original.path}
+        </code>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => <StatusBadge code={row.original.status} />,
+    },
+    {
+      accessorKey: "latency",
+      header: "Latency",
+      cell: ({ row }) => {
+        const lat = row.original.latency;
+        const color =
+          lat > 200
+            ? "text-red-500"
+            : lat > 100
+              ? "text-orange-500"
+              : "text-green-500";
+        return (
+          <span className={`font-mono text-xs font-bold ${color}`}>
+            {lat}ms
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "time",
+      header: "Timestamp",
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {row.original.time}
+        </span>
+      ),
+    },
+  ];
 
   const table = useReactTable({
-    data,
+    data: recentVisitors,
     columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
     state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
       pagination,
     },
-    getRowId: (row) => row.id.toString(),
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      setData((data) => {
-        const oldIndex = dataIds.indexOf(active.id);
-        const newIndex = dataIds.indexOf(over.id);
-        return arrayMove(data, oldIndex, newIndex);
-      });
-    }
-  }
-
   return (
-    <Tabs
-      defaultValue="outline"
-      className="w-full flex-col justify-start gap-6"
-    >
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
-        </TabsList>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide(),
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Add Section</span>
-          </Button>
-        </div>
-      </div>
-      <TabsContent
-        value="outline"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+    <div className="flex flex-col gap-6 p-4 md:p-6 w-full max-w-[1600px] mx-auto">
+      {/* 2. MAIN TABS SECTION (Default: visitors) */}
+      <Tabs
+        defaultValue="visitors"
+        className="w-full flex-col justify-start gap-6"
       >
-        <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
+        {/* TAB CONTROLS */}
+        <div className="flex items-center justify-between">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="visitors" className="gap-2">
+              Visitor Logs{" "}
+              <Badge variant="secondary" className="ml-1 px-1 py-0 text-[10px]">
+                Live
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="traffic" className="gap-2">
+              Traffic Trends
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-2">
+              Security Events{" "}
+              <Badge
+                variant="destructive"
+                className="ml-1 px-1 py-0 text-[10px] h-4"
+              >
+                2
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden lg:flex">
+                  <IconLayoutColumns className="mr-2 size-4" /> View
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuCheckboxItem checked>
+                  Time
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked>
+                  Status
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>User Agent</DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="outline" size="sm" className="hidden lg:flex">
+              <IconFilter className="mr-2 size-4" /> Filter
+            </Button>
+            <Button variant="default" size="sm">
+              <IconDownload className="mr-2 size-4" /> Export Report
+            </Button>
+          </div>
+        </div>
+
+        {/* CONTENT: VISITOR TABLE */}
+        <TabsContent value="visitors" className="mt-4">
+          <Card className="overflow-hidden">
+            <CardHeader className="px-6 py-4 border-b">
+              <CardTitle>Recent Visitor Log</CardTitle>
+              <CardDescription>
+                Detailed incoming request data from valid sources.
+              </CardDescription>
+            </CardHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className="h-10 text-xs font-semibold"
+                        >
                           {header.isPlaceholder
                             ? null
                             : flexRender(
@@ -496,307 +509,230 @@ export function DataTable({
                                 header.getContext(),
                               )}
                         </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
-                    ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
-        </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
-              </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
+                      ))}
+                    </TableRow>
                   ))}
-                </SelectContent>
-              </Select>
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id} className="h-12 hover:bg-muted/50">
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="py-2">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-    </Tabs>
-  );
-}
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig;
-
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-  const isMobile = useIsMobile();
-
-  return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.header}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.header}</DrawerTitle>
-          <DrawerDescription>
-            Showing total visitors for the last 6 months
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
-            <>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={chartData}
-                  margin={{
-                    left: 0,
-                    right: 10,
-                  }}
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-xs text-muted-foreground">
+                Showing {table.getPaginationRowModel().rows.length} of{" "}
+                {recentVisitors.length} events
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
                 >
-                  <CartesianGrid vertical={false} />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* CONTENT: TRAFFIC CHART (Line Graph) */}
+        <TabsContent value="traffic" className="mt-4">
+          <Card className="h-[500px]">
+            <CardHeader>
+              <CardTitle>Traffic Analysis</CardTitle>
+              <CardDescription>
+                Requests and Latency metrics over the last hour.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={performanceData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--border))"
+                  />
                   <XAxis
-                    dataKey="month"
+                    dataKey="time"
                     tickLine={false}
                     axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                    hide
+                    tickMargin={10}
+                    fontSize={12}
+                    stroke="hsl(var(--muted-foreground))"
                   />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
+                  <YAxis
+                    yAxisId="left"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    stroke="hsl(var(--muted-foreground))"
+                    label={{
+                      value: "Requests",
+                      angle: -90,
+                      position: "insideLeft",
+                      fill: "hsl(var(--muted-foreground))",
+                    }}
                   />
-                  <Area
-                    dataKey="mobile"
-                    type="natural"
-                    fill="var(--color-mobile)"
-                    fillOpacity={0.6}
-                    stroke="var(--color-mobile)"
-                    stackId="a"
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    stroke="hsl(var(--muted-foreground))"
+                    label={{
+                      value: "Latency (ms)",
+                      angle: 90,
+                      position: "insideRight",
+                      fill: "hsl(var(--muted-foreground))",
+                    }}
                   />
-                  <Area
-                    dataKey="desktop"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
-                    stackId="a"
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "1px solid hsl(var(--border))",
+                      background: "hsl(var(--background))",
+                    }}
                   />
-                </AreaChart>
-              </ChartContainer>
-              <Separator />
-              <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
-                  <IconTrendingUp className="size-4" />
-                </div>
-                <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
-                </div>
+                  <Legend />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="requests"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                    name="Requests"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="latency"
+                    stroke="#f97316"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                    name="Latency (ms)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* CONTENT: SECURITY EVENTS */}
+        <TabsContent value="security" className="mt-4">
+          <Card className="overflow-hidden">
+            <CardHeader className="px-6 py-4 border-b flex flex-row items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2">
+                  <IconShieldLock className="size-5 text-red-500" /> Security
+                  Event Log
+                </CardTitle>
+                <CardDescription>
+                  Detected potential threats and authentication events.
+                </CardDescription>
               </div>
-              <Separator />
-            </>
-          )}
-          <form className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="header">Header</Label>
-              <Input id="header" defaultValue={item.header} />
+              <Button variant="destructive" size="sm">
+                <IconBan className="mr-2 size-4" /> Block Selected IPs
+              </Button>
+            </CardHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="w-[100px]">Severity</TableHead>
+                    <TableHead>Event Type</TableHead>
+                    <TableHead>Source IP / User</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {securityEvents.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell>
+                        <SecurityBadge severity={event.severity} />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {event.event}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {event.source}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {event.target}
+                      </TableCell>
+                      <TableCell>
+                        {event.status === "Blocked" ? (
+                          <span className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200 w-fit">
+                            <IconLock className="size-3" /> Blocked
+                          </span>
+                        ) : event.status === "Flagged" ? (
+                          <span className="flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 w-fit">
+                            <IconAlertTriangle className="size-3" /> Flagged
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200 w-fit">
+                            <IconCheck className="size-3" /> Allowed
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {event.time}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="h-8">
+                          Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="type">Type</Label>
-                <Select defaultValue={item.type}>
-                  <SelectTrigger id="type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Table of Contents">
-                      Table of Contents
-                    </SelectItem>
-                    <SelectItem value="Executive Summary">
-                      Executive Summary
-                    </SelectItem>
-                    <SelectItem value="Technical Approach">
-                      Technical Approach
-                    </SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Capabilities">Capabilities</SelectItem>
-                    <SelectItem value="Focus Documents">
-                      Focus Documents
-                    </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Cover Page">Cover Page</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Status</Label>
-                <Select defaultValue={item.status}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Done">Done</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="target">Target</Label>
-                <Input id="target" defaultValue={item.target} />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="limit">Limit</Label>
-                <Input id="limit" defaultValue={item.limit} />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="reviewer">Reviewer</Label>
-              <Select defaultValue={item.reviewer}>
-                <SelectTrigger id="reviewer" className="w-full">
-                  <SelectValue placeholder="Select a reviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                  <SelectItem value="Jamik Tashpulatov">
-                    Jamik Tashpulatov
-                  </SelectItem>
-                  <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </form>
-        </div>
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

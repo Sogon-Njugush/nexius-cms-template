@@ -39,7 +39,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Active Leads</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            1,234
+            234
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
@@ -59,7 +59,7 @@ export function SectionCards() {
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Active Blogs</CardDescription>
+          <CardDescription>Active Sessions</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             45,678
           </CardTitle>
@@ -72,9 +72,9 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <IconTrendingUp className="size-4" />
+            Avg Latency 42ms <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
+          <div className="text-muted-foreground">within 100ms threshold</div>
         </CardFooter>
       </Card>
       <Card className="@container/card">
@@ -92,9 +92,10 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance increase <IconTrendingUp className="size-4" />
+            Requests/min 112
+            <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
+          <div className="text-muted-foreground">+12% spike detected</div>
         </CardFooter>
       </Card>
     </div>
