@@ -98,7 +98,7 @@ export function LoginForm({
                 <Button variant="outline" type="button" className="w-full">
                   Login with Google
                 </Button>
-                <FieldDescription className="text-center pt-4">
+                {/* <FieldDescription className="text-center pt-4">
                   Don&apos;t have an account?{" "}
                   <a
                     href="#"
@@ -106,7 +106,7 @@ export function LoginForm({
                   >
                     Sign up
                   </a>
-                </FieldDescription>
+                </FieldDescription> */}
               </Field>
             </FieldGroup>
           </form>
