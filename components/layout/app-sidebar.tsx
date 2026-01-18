@@ -109,7 +109,7 @@ const data = {
       title: "Media Library",
       url: "/media",
       icon: ImageIcon,
-      items: [], // Single item parent
+      items: [{ title: "Media", url: "/media" }], // Single item parent
     },
     {
       title: "Settings",
