@@ -9,8 +9,6 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
-  // throw a false error
-  throw new Error("Error 424");
   return (
     <SidebarProvider
       style={
