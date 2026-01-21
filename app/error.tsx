@@ -34,7 +34,7 @@ export default function Error({
 
       {/* Optional: Show technical error message in dev mode only */}
       <div className="mt-6 w-full max-w-md rounded-md bg-slate-100 p-4 dark:bg-slate-900">
-        <code className="text-xs font-mono text-red-600 break-all">
+        <code className="text-xs font-mono break-all">
           {error.message || "Unknown Application Error"}
         </code>
       </div>
