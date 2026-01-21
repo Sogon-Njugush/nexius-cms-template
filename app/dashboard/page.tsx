@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
   // throw a false error
-  throw new Error("Broken library usage");
+  throw new Error("Error 424");
   return (
     <SidebarProvider
       style={
