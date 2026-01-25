@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Nexius CMS",
-  description: "Nexius CMS",
+  description: "Development CMS",
 };
 
 export default async function RootLayout({
